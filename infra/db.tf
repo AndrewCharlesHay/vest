@@ -1,3 +1,17 @@
+resource "random_password" "db_password" {
+  length  = 16
+  special = false
+}
+
+resource "aws_secretsmanager_secret" "db_password" {
+  name = "vest-db-password"
+}
+
+resource "aws_secretsmanager_secret_version" "db_password" {
+  secret_id     = aws_secretsmanager_secret.db_password.id
+  secret_string = random_password.db_password.result
+}
+
 resource "aws_db_instance" "default" {
   identifier           = "vest-db"
   allocated_storage    = 20
@@ -7,7 +21,7 @@ resource "aws_db_instance" "default" {
   instance_class       = "db.t3.micro"
   db_name              = var.db_name
   username             = var.db_username
-  password             = var.db_password
+  password             = random_password.db_password.result
   parameter_group_name = "default.postgres18"
   skip_final_snapshot  = true
   publicly_accessible  = false
