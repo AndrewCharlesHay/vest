@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-    steps:
+
     - uses: actions/checkout@v4
     
     - name: Configure AWS credentials
