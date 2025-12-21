@@ -4,7 +4,7 @@ main
 *.dll
 
 # Go
-go.sum
+
 
 # Terraform / OpenTofu
 .terraform
