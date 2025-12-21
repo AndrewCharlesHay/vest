@@ -19,6 +19,11 @@ resource "aws_ecr_repository" "app" {
   name = "vest-app"
 }
 
+import {
+  to = aws_ecr_repository.app
+  id = "vest-app"
+}
+
 resource "aws_ecs_cluster" "main" {
   name = "vest-cluster"
 }
