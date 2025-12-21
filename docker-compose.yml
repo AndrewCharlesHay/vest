@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:18.1-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vest
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+
+  sftp:
+    image: atmoz/sftp
+    volumes:
+      - ./sftp_data:/home/vest/upload
+    ports:
+      - "2222:22"
+    command: vest:pass:1001
+
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/vest
+      SFTP_HOST: sftp:22
+      SFTP_USER: vest
+      SFTP_PASS: pass
+      SFTP_DIR: /upload
+    depends_on:
+      - db
+      - sftp
+    ports:
+      - "8080:8080"

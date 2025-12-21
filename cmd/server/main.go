@@ -1,0 +1,107 @@
+package main
+
+import (
+	"context"
+	"database/sql"
+	"log"
+
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/AndrewCharlesHay/vest/internal/api"
+	"github.com/AndrewCharlesHay/vest/internal/ingest"
+	_ "github.com/jackc/pgx/v5/stdlib" // PG driver
+	"github.com/pkg/sftp"
+	"golang.org/x/crypto/ssh"
+)
+
+func main() {
+	// 1. DB Connection
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		log.Fatal("DATABASE_URL is required")
+	}
+	db, err := sql.Open("pgx", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+	
+	// Wait for DB to be ready
+	for i := 0; i < 10; i++ {
+		if err := db.Ping(); err == nil {
+			break
+		}
+		log.Println("Waiting for DB...")
+		time.Sleep(2 * time.Second)
+	}
+
+	// 2. SFTP Connection for Ingestion
+	// Only start if config present (optional for running just API test?)
+	sftpHost := os.Getenv("SFTP_HOST")
+	if sftpHost != "" {
+		go func() {
+			log.Println("Starting SFTP Ingestor...")
+			for {
+				err := runIngestor(db, sftpHost)
+				if err != nil {
+					log.Printf("Ingestor failed: %v. Retrying in 5s...", err)
+					time.Sleep(5 * time.Second)
+				}
+			}
+		}()
+	}
+
+	// 3. API Server
+	h := api.NewHandler(db)
+	
+	http.HandleFunc("/blotter", h.Blotter)
+	http.HandleFunc("/positions", h.Positions)
+	http.HandleFunc("/alarms", h.Alarms)
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
+	})
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	log.Printf("Server listening on port %s", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func runIngestor(db *sql.DB, host string) error {
+	user := os.Getenv("SFTP_USER")
+	pass := os.Getenv("SFTP_PASS")
+	dir := os.Getenv("SFTP_DIR")
+	
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(pass),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // For exercise
+	}
+
+	conn, err := ssh.Dial("tcp", host, config)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	client, err := sftp.NewClient(conn)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	worker := ingest.NewWorker(db, client, dir)
+	worker.Start(context.Background()) // This blocks loop in worker, but we want it to run just once or loop inside? 
+	// Worker.Start loops.
+	return nil
+}
