@@ -7,7 +7,7 @@ resource "random_id" "bucket_suffix" {
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "${var.backend_bucket_prefix}-${random_id.bucket_suffix.hex}"
+  bucket = "vest-tf-state-backend-ops-interview-ah"
   
   lifecycle {
     prevent_destroy = true
