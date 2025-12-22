@@ -55,7 +55,23 @@ resource "aws_ecs_task_definition" "app" {
       ]
       environment = [
         { name = "DATABASE_URL", value = "postgres://..." }, # In real life, use Secrets Manager
-        { name = "SFTP_HOST", value = "sftp.example.com:22" }
+        { name = "SFTP_HOST", value = "localhost:22" },
+        { name = "SFTP_USER", value = "vest" },
+        { name = "SFTP_PASS", value = "pass" },
+        { name = "SFTP_DIR", value = "/upload" }
+      ]
+    },
+    {
+      name  = "sftp"
+      image = "atmoz/sftp"
+      # Format: user:pass:uid:gid:dir
+      # Default uid 1001 for user.
+      command = ["vest:pass:1001"]
+      portMappings = [
+        {
+          containerPort = 22
+          hostPort      = 2222 # Only applicable if host network, but in awsvpc it's just exposing port 22 on container
+        }
       ]
     }
   ])

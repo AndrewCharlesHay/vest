@@ -37,6 +37,25 @@ func main() {
 		time.Sleep(2 * time.Second)
 	}
 
+	// Auto-Migrate (Create Table)
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS positions (
+			date DATE NOT NULL,
+			account_id TEXT NOT NULL,
+			ticker TEXT NOT NULL,
+			quantity DECIMAL(15, 2),
+			market_value DECIMAL(15, 2),
+			shares DECIMAL(15, 2),
+			source_system TEXT,
+			ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			PRIMARY KEY (date, account_id, ticker)
+		);
+	`)
+	if err != nil {
+		log.Fatal("Migration failed:", err)
+	}
+	log.Println("Database schema initialized.")
+
 	// 2. SFTP Connection for Ingestion
 	// Only start if config present (optional for running just API test?)
 	sftpHost := os.Getenv("SFTP_HOST")
