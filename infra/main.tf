@@ -9,6 +9,13 @@ terraform {
       version = "~> 3.0"
     }
   }
+  backend "s3" {
+    bucket         = "vest-tf-state-backend-ops-interview-ah"
+    key            = "terraform.tfstate"
+    region         = "us-east-1"
+    encrypt        = true
+
+  }
 }
 
 provider "aws" {
