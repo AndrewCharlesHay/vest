@@ -1,6 +1,10 @@
 #!/bin/bash
 
-BASE_URL="http://localhost:8080"
+if [ -z "$API_URL" ]; then
+  BASE_URL="http://localhost:8080"
+else
+  BASE_URL="$API_URL"
+fi
 DATE="2025-01-15"
 
 echo "Checking Health..."

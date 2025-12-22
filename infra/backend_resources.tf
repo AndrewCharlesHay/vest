@@ -14,6 +14,11 @@ resource "aws_s3_bucket" "terraform_state" {
   }
 }
 
+import {
+  to = aws_s3_bucket.terraform_state
+  id = "vest-tf-state-backend-ops-interview-ah"
+}
+
 resource "aws_s3_bucket_versioning" "terraform_state" {
   bucket = aws_s3_bucket.terraform_state.id
   versioning_configuration {
