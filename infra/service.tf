@@ -31,7 +31,7 @@ resource "aws_security_group" "app_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-}
+
 
 # We need data source for default VPC and subnets to make this work dynamically
 data "aws_vpc" "default" {
