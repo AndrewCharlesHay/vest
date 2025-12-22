@@ -53,6 +53,7 @@ resource "aws_ecs_task_definition" "app" {
           hostPort      = 8080
         }
       ]
+      environment = [
         { name = "DB_HOST", value = aws_db_instance.default.address },
         { name = "DB_USER", value = var.db_username },
         { name = "DB_NAME", value = var.db_name },
