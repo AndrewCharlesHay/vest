@@ -54,6 +54,11 @@ resource "aws_ecs_task_definition" "app" {
   ])
 }
 
+import {
+  to = aws_iam_role.ecs_task_execution_role
+  id = "vest-ecs-task-execution-role"
+}
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "vest-ecs-task-execution-role"
 

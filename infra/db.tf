@@ -3,6 +3,16 @@ resource "random_password" "db_password" {
   special = false
 }
 
+import {
+  to = aws_secretsmanager_secret.db_password
+  id = "vest-db-password"
+}
+
+import {
+  to = aws_db_instance.default
+  id = "vest-db"
+}
+
 resource "aws_secretsmanager_secret" "db_password" {
   name = "vest-db-password"
 }
