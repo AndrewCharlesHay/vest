@@ -20,7 +20,16 @@ func main() {
 	// 1. DB Connection
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		log.Fatal("DATABASE_URL is required")
+		host := os.Getenv("DB_HOST")
+		user := os.Getenv("DB_USER")
+		pass := os.Getenv("DB_PASSWORD")
+		name := os.Getenv("DB_NAME")
+		if host != "" && user != "" && pass != "" && name != "" {
+			// postgres://user:password@host:port/dbname
+			dbURL = "postgres://" + user + ":" + pass + "@" + host + ":5432/" + name
+		} else {
+			log.Fatal("DATABASE_URL or (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME) is required")
+		}
 	}
 	db, err := sql.Open("pgx", dbURL)
 	if err != nil {

@@ -53,12 +53,20 @@ resource "aws_ecs_task_definition" "app" {
           hostPort      = 8080
         }
       ]
-      environment = [
-        { name = "DATABASE_URL", value = "postgres://..." }, # In real life, use Secrets Manager
+        { name = "DB_HOST", value = aws_db_instance.default.address },
+        { name = "DB_USER", value = var.db_username },
+        { name = "DB_NAME", value = var.db_name },
+        # SFTP Config
         { name = "SFTP_HOST", value = "localhost:22" },
         { name = "SFTP_USER", value = "vest" },
         { name = "SFTP_PASS", value = "pass" },
         { name = "SFTP_DIR", value = "/upload" }
+      ]
+      secrets = [
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = aws_secretsmanager_secret.db_password.arn
+        }
       ]
     },
     {
