@@ -1,11 +1,14 @@
+variable "backend_bucket_prefix" {
+  default = "vest-tf-state"
+}
+
 resource "random_id" "bucket_suffix" {
   byte_length = 8
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "vest-tf-state-${random_id.bucket_suffix.hex}"
+  bucket = "${var.backend_bucket_prefix}-${random_id.bucket_suffix.hex}"
   
-  # Prevent accidental deletion of this S3 bucket
   lifecycle {
     prevent_destroy = true
   }
