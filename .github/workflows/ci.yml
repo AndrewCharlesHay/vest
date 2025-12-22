@@ -106,13 +106,18 @@ jobs:
 
     - name: Get Task Public IP and Run Smoketest
       run: |
-        # Get the Task ARN (assuming one task)
+        echo "Waiting for service to stabilize..."
+        aws ecs wait services-stable --cluster vest-cluster --services vest-app-service
+        
+        # Get the Task ARN
         TASK_ARN=$(aws ecs list-tasks --cluster vest-cluster --service-name vest-app-service --query "taskArns[0]" --output text)
         echo "Task ARN: $TASK_ARN"
         
-        # Wait for task to be RUNNING
-        aws ecs wait tasks-running --cluster vest-cluster --tasks $TASK_ARN
-        
+        if [ "$TASK_ARN" == "None" ]; then
+          echo "Error: No task found after service stability wait."
+          exit 1
+        fi
+
         # Get ENI info
         ENI_ID=$(aws ecs describe-tasks --cluster vest-cluster --tasks $TASK_ARN --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value" --output text)
         echo "ENI ID: $ENI_ID"
