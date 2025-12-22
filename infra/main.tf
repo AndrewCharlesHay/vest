@@ -70,7 +70,7 @@ resource "aws_ecs_task_definition" "app" {
       portMappings = [
         {
           containerPort = 22
-          hostPort      = 2222 # Only applicable if host network, but in awsvpc it's just exposing port 22 on container
+          hostPort      = 22
         }
       ]
     }
