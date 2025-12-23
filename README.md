@@ -10,12 +10,12 @@ It's built with **Go** for speed and type safety, **PostgreSQL** for reliable da
 
 ```mermaid
 graph TD
-    Client[Client/User] -->|HTTPS / API Key| ALB[Load Balancer / Ingress]
-    ALB -->|Port 8080| App[Go App (ECS Fargate)]
+    Client["Client/User"] -->|HTTPS / API Key| ALB["Load Balancer / Ingress"]
+    ALB -->|Port 8080| App["Go App (ECS Fargate)"]
     
     subgraph "VPC (Private Network)"
-        App -->|Port 5432| DB[(AWS RDS Postgres)]
-        App -->|Localhost:22| SFTP[SFTP Sidecar]
+        App -->|Port 5432| DB[("AWS RDS Postgres")]
+        App -->|Localhost:22| SFTP["SFTP Sidecar"]
     end
     
     SFTP -->|Uploads| Volume[Shared Volume]
