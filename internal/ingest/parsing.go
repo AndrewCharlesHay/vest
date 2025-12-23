@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/AndrewCharlesHay/vest/internal/models"
 )
