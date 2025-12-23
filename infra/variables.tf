@@ -11,3 +11,9 @@ variable "db_name" {
   type        = string
   default     = "vest"
 }
+
+variable "alert_email" {
+  description = "Email address for CloudWatch alerts"
+  type        = string
+  default     = "noreply@example.com" # Placeholder until user provides one
+}
