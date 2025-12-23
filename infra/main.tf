@@ -35,6 +35,11 @@ resource "aws_ecs_cluster" "main" {
   name = "vest-cluster"
 }
 
+resource "random_password" "api_key" {
+  length  = 32
+  special = false
+}
+
 resource "aws_ecs_task_definition" "app" {
   family                   = "vest-app"
   network_mode             = "awsvpc"
@@ -57,6 +62,7 @@ resource "aws_ecs_task_definition" "app" {
         { name = "DB_HOST", value = aws_db_instance.default.address },
         { name = "DB_USER", value = var.db_username },
         { name = "DB_NAME", value = var.db_name },
+        { name = "API_KEY", value = random_password.api_key.result },
         # SFTP Config
         { name = "SFTP_HOST", value = "localhost:22" },
         { name = "SFTP_USER", value = "vest" },

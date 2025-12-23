@@ -104,6 +104,13 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
+    - name: Setup OpenTofu
+      uses: opentofu/setup-opentofu@v1
+
+    - name: Tofu Init
+      run: tofu init
+      working-directory: ./infra
+
     - name: Get Task Public IP and Run Smoketest
       run: |
         echo "Waiting for service to stabilize..."
@@ -126,9 +133,15 @@ jobs:
         PUBLIC_IP=$(aws ec2 describe-network-interfaces --network-interface-ids $ENI_ID --query "NetworkInterfaces[0].Association.PublicIp" --output text)
         echo "Public IP: $PUBLIC_IP"
         
+        # Get API Key from Terraform Output
+        cd infra
+        API_KEY=$(tofu output -raw api_key)
+        cd ..
+        
         # Run Smoketest
         export API_URL="http://$PUBLIC_IP:8080"
-        echo "Testing against $API_URL"
+        export API_KEY="$API_KEY"
+        echo "Testing against $API_URL with Key..."
         
         # Short wait for app to be ready
         sleep 10

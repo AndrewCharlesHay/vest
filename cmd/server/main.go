@@ -11,6 +11,7 @@ import (
 
 	"github.com/AndrewCharlesHay/vest/internal/api"
 	"github.com/AndrewCharlesHay/vest/internal/ingest"
+	"github.com/AndrewCharlesHay/vest/internal/middleware"
 	_ "github.com/jackc/pgx/v5/stdlib" // PG driver
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -84,12 +85,27 @@ func main() {
 	// 3. API Server
 	h := api.NewHandler(db)
 	
-	http.HandleFunc("/blotter", h.Blotter)
-	http.HandleFunc("/positions", h.Positions)
-	http.HandleFunc("/alarms", h.Alarms)
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	// Middleware
+	// We can wrap specific routes or all.
+	// Let's create a mux and wrap the whole thing or individual.
+	mux := http.NewServeMux()
+	mux.HandleFunc("/blotter", h.Blotter)
+	mux.HandleFunc("/positions", h.Positions)
+	mux.HandleFunc("/alarms", h.Alarms)
+	// Health check usually public
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
+	})
+
+	// Wrap with API Key Auth (except health?)
+	// Custom wrapper to exclude /health
+	finalHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/health" {
+			mux.ServeHTTP(w, r)
+			return
+		}
+		middleware.APIKeyAuth(mux).ServeHTTP(w, r)
 	})
 
 	port := os.Getenv("PORT")
@@ -98,7 +114,7 @@ func main() {
 	}
 
 	log.Printf("Server listening on port %s", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, finalHandler); err != nil {
 		log.Fatal(err)
 	}
 }
