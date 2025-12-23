@@ -87,7 +87,7 @@ resource "aws_ecs_task_definition" "app" {
       image = "atmoz/sftp"
       # Format: user:pass:uid:gid:dir
       # Default uid 1001 for user.
-      command = ["vest:pass:1001:1001:upload"]
+      command = ["admin:pass:0:0"]
       portMappings = [
         {
           containerPort = 22
@@ -97,7 +97,7 @@ resource "aws_ecs_task_definition" "app" {
       mountPoints = [
         {
           sourceVolume  = "sftp-data"
-          containerPath = "/home/vest/upload"
+          containerPath = "/home/admin/upload"
         }
       ]
     }

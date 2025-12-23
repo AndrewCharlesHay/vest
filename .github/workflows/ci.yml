@@ -170,17 +170,19 @@ jobs:
         
         echo "Uploading files..."
         # Try to create dir if needed or assume it exists? 
-        # Ideally we mount at /home/vest/upload. User 'vest' owns /home/vest. 
+        # Ideally we mount at /home/admin/upload.
         # But if volume is empty, 'upload' dir might not exist.
         # Let's try to mkdir first via ssh? Or just scp to root of home and see if App checks root?
         # App code checks `os.Getenv("SFTP_DIR")` which is set to `/upload`.
         # App uses `sftpClient.ReadDir(dir)`.
         # If SFTP dir is `/upload`, App checks absolute path `/upload`.
-        # In SFTP container, if we mount volume to `/home/vest/upload`, then files inside `/home/vest/upload` are visible.
-        # So we simply SCP to `upload/` path relative to home.
+        # In SFTP container, if we mount volume to `/home/admin/upload`, then files inside `/home/admin/upload` are visible.
+        # So we simply SCP to `upload/` path relative to home. (or root? atmoz creates upload dir).
+        # We will try to upload to `upload/`.
         
-        sshpass -p pass ssh -o StrictHostKeyChecking=no -p 22 vest@$PUBLIC_IP "mkdir -p upload" || true
-        sshpass -p pass scp -o StrictHostKeyChecking=no -P 22 trades.csv report.pipe vest@$PUBLIC_IP:upload/
+        # We assume 'admin' (uid 0) can write.
+        
+        sshpass -p pass scp -o StrictHostKeyChecking=no -P 22 trades.csv report.pipe admin@$PUBLIC_IP:upload/
         
         # Run Smoketest
         export API_URL="http://$PUBLIC_IP:8080"
