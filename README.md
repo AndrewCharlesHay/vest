@@ -62,7 +62,7 @@ graph TD
 
 ## 🛡️ Security Features (The "Extra Mile")
 
-We didn't just build it to work; we built it to be secure.
+The system goes beyond basic requirements to ensure enterprise-grade security.
 
 1.  **Network Isolation**: The Database is LOCKED DOWN. It runs in a secure VPC and only accepts traffic on port 5432 from the Application's specific Security Group. It is not accessible from the public internet.
 2.  **API Authentication**: All endpoints are protected by a Pre-Shared Key (Verified via `X-API-Key` header).
