@@ -85,9 +85,9 @@ func (w *Worker) ProcessFiles() error {
 		// NOTE: pkg/sftp File supports Seek.
 		
 	// Try Pipe
-		_, err := f.Seek(0, 0)
-		if err != nil {
-			log.Printf("Failed to seek file %s: %v", filename, err)
+		// err is already declared above from SFTP Open
+		if _, seekErr := f.Seek(0, 0); seekErr != nil {
+			log.Printf("Failed to seek file %s: %v", filename, seekErr)
 			f.Close()
 			continue
 		}
