@@ -75,6 +75,12 @@ resource "aws_ecs_task_definition" "app" {
           valueFrom = aws_secretsmanager_secret.db_password.arn
         }
       ]
+      mountPoints = [
+        {
+          sourceVolume  = "sftp-data"
+          containerPath = "/upload"
+        }
+      ]
     },
     {
       name  = "sftp"
@@ -88,8 +94,18 @@ resource "aws_ecs_task_definition" "app" {
           hostPort      = 22
         }
       ]
+      mountPoints = [
+        {
+          sourceVolume  = "sftp-data"
+          containerPath = "/home/vest/upload"
+        }
+      ]
     }
   ])
+
+  volume {
+    name = "sftp-data"
+  }
 }
 
 import {

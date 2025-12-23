@@ -149,6 +149,39 @@ jobs:
         API_KEY=$(tofu output -raw api_key)
         cd ..
         
+        # Install sshpass
+        sudo apt-get install -y sshpass
+        
+        # Create Dummy Data
+        echo "TradeDate,AccountID,Ticker,Quantity,Price,TradeType,SettlementDate" > trades.csv
+        echo "2025-01-15,1001,AMZN,10,185.50,BUY,2025-01-17" >> trades.csv
+        
+        echo "ReportDate|AccountID|SecurityTicker|Shares|MarketValue|SourceSystem" > report.pipe
+        echo "20250115|1001|GOOG|50|140.00|ReportingSystem" >> report.pipe
+        
+        # Upload Data via SFTP/SCP
+        # Note: atmoz/sftp with user 'vest' chroots to /home/vest. We mount /home/vest/upload.
+        # So we sftp to upload/ directory relative to chroot? Or just into the login dir?
+        # If command is "vest:pass:1001", user home is /home/vest.
+        # App expects files in /home/vest/upload (which is /upload in App).
+        # We should create the upload directory if it doesn't exist?
+        # Actually, let's just try to upload to upload/ folder.
+        # sshpass -p pass scp -o StrictHostKeyChecking=no -P 22 trades.csv vest@$PUBLIC_IP:upload/
+        
+        echo "Uploading files..."
+        # Try to create dir if needed or assume it exists? 
+        # Ideally we mount at /home/vest/upload. User 'vest' owns /home/vest. 
+        # But if volume is empty, 'upload' dir might not exist.
+        # Let's try to mkdir first via ssh? Or just scp to root of home and see if App checks root?
+        # App code checks `os.Getenv("SFTP_DIR")` which is set to `/upload`.
+        # App uses `sftpClient.ReadDir(dir)`.
+        # If SFTP dir is `/upload`, App checks absolute path `/upload`.
+        # In SFTP container, if we mount volume to `/home/vest/upload`, then files inside `/home/vest/upload` are visible.
+        # So we simply SCP to `upload/` path relative to home.
+        
+        sshpass -p pass ssh -o StrictHostKeyChecking=no -p 22 vest@$PUBLIC_IP "mkdir -p upload" || true
+        sshpass -p pass scp -o StrictHostKeyChecking=no -P 22 trades.csv report.pipe vest@$PUBLIC_IP:upload/
+        
         # Run Smoketest
         export API_URL="http://$PUBLIC_IP:8080"
         export API_KEY="$API_KEY"
