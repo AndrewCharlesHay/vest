@@ -81,13 +81,19 @@ resource "aws_ecs_task_definition" "app" {
           containerPath = "/upload"
         }
       ]
+      dependsOn = [
+        {
+          containerName = "init"
+          condition     = "SUCCESS"
+        }
+      ]
     },
     {
       name  = "sftp"
       image = "atmoz/sftp"
       # Format: user:pass:uid:gid:dir
       # Default uid 1001 for user.
-      command = ["admin:pass:0:0"]
+      command = ["vest:pass:1001:1001:upload"]
       portMappings = [
         {
           containerPort = 22
@@ -97,7 +103,25 @@ resource "aws_ecs_task_definition" "app" {
       mountPoints = [
         {
           sourceVolume  = "sftp-data"
-          containerPath = "/home/admin/upload"
+          containerPath = "/home/vest/upload"
+        }
+      ]
+      dependsOn = [
+        {
+          containerName = "init"
+          condition     = "SUCCESS"
+        }
+      ]
+    },
+    {
+      name      = "init"
+      image     = "busybox"
+      essential = false
+      command   = ["sh", "-c", "chown -R 1001:1001 /data && chmod 755 /data"]
+      mountPoints = [
+        {
+          sourceVolume  = "sftp-data"
+          containerPath = "/data"
         }
       ]
     }
