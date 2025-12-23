@@ -95,6 +95,12 @@ jobs:
       run: tofu apply -auto-approve tfplan
       working-directory: ./infra
 
+    - name: Force ECS Deployment
+      if: github.ref == 'refs/heads/main'
+      run: |
+        aws ecs update-service --cluster vest-cluster --service vest-app-service --force-new-deployment
+        echo "Forced new deployment to pick up latest image."
+
   verify-remote:
     needs: deploy
     runs-on: ubuntu-latest
