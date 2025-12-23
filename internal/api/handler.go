@@ -47,7 +47,9 @@ func (h *Handler) Blotter(w http.ResponseWriter, r *http.Request) {
 		results = append(results, b)
 	}
 
-	json.NewEncoder(w).Encode(results)
+	if err := json.NewEncoder(w).Encode(results); err != nil {
+		return
+	}
 }
 
 func (h *Handler) Positions(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +111,9 @@ func (h *Handler) Positions(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		return
+	}
 }
 
 func (h *Handler) Alarms(w http.ResponseWriter, r *http.Request) {
@@ -176,5 +180,10 @@ func (h *Handler) Alarms(w http.ResponseWriter, r *http.Request) {
 		response = []models.AlarmResponse{}
 	}
 
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		// Can't effectively change status if partly written, but should verify
+		// Just log?
+		// log.Printf("Failed to encode response: %v", err)
+		return
+	}
 }

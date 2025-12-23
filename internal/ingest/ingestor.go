@@ -84,15 +84,26 @@ func (w *Worker) ProcessFiles() error {
 		
 		// NOTE: pkg/sftp File supports Seek.
 		
-		// Try Pipe
-		_, err = f.Seek(0, 0)
+	// Try Pipe
+		_, err := f.Seek(0, 0)
+		if err != nil {
+			log.Printf("Failed to seek file %s: %v", filename, err)
+			f.Close()
+			continue
+		}
+
 		records2, err2 := ParseFormat2(f)
 		if err2 == nil && len(records2) > 0 {
 			// It is format 2
 			err = w.IngestFormat2(records2)
 		} else {
 			// Try Format 1
-			f.Seek(0, 0)
+			if _, seekErr := f.Seek(0, 0); seekErr != nil {
+				log.Printf("Failed to seek file %s: %v", filename, seekErr)
+				f.Close()
+				continue
+			}
+
 			records1, err1 := ParseFormat1(f)
 			if err1 == nil && len(records1) > 0 {
 				err = w.IngestFormat1(records1)
@@ -111,7 +122,9 @@ func (w *Worker) ProcessFiles() error {
 			log.Printf("Successfully ingested %s", filename)
 			// Move or delete to avoid reprocessing endlessly in this loop
 			// For exercise, we delete
-			w.SFTPClient.Remove(filepath.Join(w.UploadDir, filename))
+			if err := w.SFTPClient.Remove(filepath.Join(w.UploadDir, filename)); err != nil {
+				log.Printf("Failed to remove file %s: %v", filename, err)
+			}
 		}
 	}
 	return nil
@@ -122,7 +135,11 @@ func (w *Worker) IngestFormat1(records []models.TradeRecord) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Printf("Failed to rollback tx: %v", err)
+		}
+	}()
 
 	stmt, err := tx.Prepare(`
 		INSERT INTO positions (date, account_id, ticker, quantity, market_value, shares, source_system)
@@ -162,7 +179,11 @@ func (w *Worker) IngestFormat2(records []models.ReportRecord) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Printf("Failed to rollback tx: %v", err)
+		}
+	}()
 
 	stmt, err := tx.Prepare(`
 		INSERT INTO positions (date, account_id, ticker, quantity, market_value, shares, source_system)

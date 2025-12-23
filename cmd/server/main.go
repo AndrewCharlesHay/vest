@@ -95,7 +95,9 @@ func main() {
 	// Health check usually public
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			log.Printf("Health check write failed: %v", err)
+		}
 	})
 
 	// Wrap with API Key Auth (except health?)
