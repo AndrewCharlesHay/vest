@@ -94,8 +94,9 @@ func main() {
 	mux.HandleFunc("/alarms", h.Alarms)
 	// Health check usually public
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("OK")); err != nil {
+		if _, err := w.Write([]byte(`{"status":"ok"}`)); err != nil {
 			log.Printf("Health check write failed: %v", err)
 		}
 	})
