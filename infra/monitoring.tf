@@ -26,3 +26,21 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
     ServiceName = aws_ecs_service.app.name
   }
 }
+
+resource "aws_cloudwatch_metric_alarm" "db_cpu_high" {
+  alarm_name          = "vest-db-cpu-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/RDS"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = "80"
+  alarm_description   = "This metric monitors rds cpu utilization"
+  alarm_actions       = [aws_sns_topic.alerts.arn]
+  ok_actions          = [aws_sns_topic.alerts.arn]
+
+  dimensions = {
+    DBInstanceIdentifier = aws_db_instance.default.identifier
+  }
+}
