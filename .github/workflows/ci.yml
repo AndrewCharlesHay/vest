@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feat/advanced-parsing ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, feat/advanced-parsing ]
 
 jobs:
 
@@ -41,7 +41,7 @@ jobs:
   deploy:
     needs: docker
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/advanced-parsing'
     steps:
 
     - uses: actions/checkout@v4
@@ -91,12 +91,12 @@ jobs:
       working-directory: ./infra
       
     - name: Terraform Apply
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/advanced-parsing'
       run: tofu apply -auto-approve tfplan
       working-directory: ./infra
 
     - name: Force ECS Deployment
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/advanced-parsing'
       run: |
         aws ecs update-service --cluster vest-cluster --service vest-app-service --force-new-deployment
         echo "Forced new deployment to pick up latest image."
@@ -104,7 +104,7 @@ jobs:
   verify-remote:
     needs: deploy
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feat/advanced-parsing'
     steps:
     - uses: actions/checkout@v4
 
